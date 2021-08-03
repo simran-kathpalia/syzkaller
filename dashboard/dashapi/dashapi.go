@@ -67,6 +67,7 @@ type Build struct {
 	Manager             string
 	ID                  string
 	OS                  string
+	VMOS                string
 	Arch                string
 	VMArch              string
 	SyzkallerCommit     string
@@ -328,6 +329,7 @@ type BugReport struct {
 	CC                []string // deprecated in favor of Recipients
 	Recipients        Recipients
 	OS                string
+	VMOS              string
 	Arch              string
 	VMArch            string
 	UserSpaceArch     string // user-space arch as kernel developers know it (rather than Go names)

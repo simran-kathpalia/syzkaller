@@ -17,6 +17,7 @@ import (
 type Target struct {
 	osCommon
 	OS               string
+	VMOS             string
 	Arch             string
 	VMArch           string // e.g. amd64 for 386, or arm64 for arm
 	PtrSize          uint64
@@ -218,6 +219,7 @@ var List = map[string]map[string]*Target{
 	},
 	Linux: {
 		AMD64: {
+			VMOS:             "FreeBSD",
 			PtrSize:          8,
 			PageSize:         4 << 10,
 			LittleEndian:     true,
@@ -232,6 +234,7 @@ var List = map[string]map[string]*Target{
 			},
 		},
 		I386: {
+			VMOS:             "FreeBSD",
 			VMArch:           AMD64,
 			PtrSize:          4,
 			PageSize:         4 << 10,
@@ -448,11 +451,13 @@ var List = map[string]map[string]*Target{
 
 var oses = map[string]osCommon{
 	Linux: {
+		BuildOS:                "FreeBSD",
 		SyscallNumbers:         true,
 		SyscallPrefix:          "__NR_",
 		ExecutorUsesShmem:      true,
 		ExecutorUsesForkServer: true,
 		KernelObject:           "vmlinux",
+		CPP:                    "compat/linux/bin/cpp",
 		cflags:                 []string{"-static"},
 	},
 	FreeBSD: {
@@ -617,6 +622,12 @@ func init() {
 			}
 		}
 		target.BuildOS = goos
+	}
+	if goos == "freebsd" {
+		for _, target := range List["linux"] {
+			target.CCompiler = "/compat/linux/bin/gcc"
+			target.CFlags = append(target.CFlags, "-std=c++03")
+		}
 	}
 }
 

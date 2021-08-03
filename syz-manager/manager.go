@@ -449,7 +449,7 @@ func (mgr *Manager) preloadCorpus() {
 	}
 	mgr.corpusDB = corpusDB
 
-	if seedDir := filepath.Join(mgr.cfg.Syzkaller, "sys", mgr.cfg.TargetOS, "test"); osutil.IsExist(seedDir) {
+	if seedDir := filepath.Join(mgr.cfg.Syzkaller, "sys", mgr.cfg.TargetVMOS, "test"); osutil.IsExist(seedDir) {
 		seeds, err := ioutil.ReadDir(seedDir)
 		if err != nil {
 			log.Fatalf("failed to read seeds dir: %v", err)
@@ -625,7 +625,7 @@ func (mgr *Manager) runInstanceInner(index int, instanceName string) (*report.Re
 	defer atomic.AddUint32(&mgr.numFuzzing, ^uint32(0))
 
 	cmd := instance.FuzzerCmd(fuzzerBin, executorBin, instanceName,
-		mgr.cfg.TargetOS, mgr.cfg.TargetArch, fwdAddr, mgr.cfg.Sandbox, procs, fuzzerV,
+		mgr.cfg.TargetVMOS, mgr.cfg.TargetArch, fwdAddr, mgr.cfg.Sandbox, procs, fuzzerV,
 		mgr.cfg.Cover, *flagDebug, false, false, true, mgr.cfg.Timeouts.Slowdown)
 	outc, errc, err := inst.Run(mgr.cfg.Timeouts.VMRunningTime, mgr.vmStop, cmd)
 	if err != nil {

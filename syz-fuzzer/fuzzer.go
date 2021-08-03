@@ -114,8 +114,8 @@ func createIPCConfig(features *host.Features, config *ipc.Config) {
 	if features[host.FeatureNetDevices].Enabled {
 		config.Flags |= ipc.FlagEnableNetDev
 	}
-	config.Flags |= ipc.FlagEnableNetReset
-	config.Flags |= ipc.FlagEnableCgroups
+	//config.Flags |= ipc.FlagEnableNetReset
+	//config.Flags |= ipc.FlagEnableCgroups
 	config.Flags |= ipc.FlagEnableCloseFds
 	if features[host.FeatureDevlinkPCI].Enabled {
 		config.Flags |= ipc.FlagEnableDevlinkPCI

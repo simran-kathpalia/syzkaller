@@ -109,6 +109,7 @@ func (ctx netbsd) copyKernelToDisk(targetArch, vmType, outputDir, kernel string)
 		VM:      json.RawMessage([]byte(vmConfig)),
 		Derived: mgrconfig.Derived{
 			TargetOS:     targets.NetBSD,
+			TargetVMOS:   targets.NetBSD,
 			TargetArch:   targetArch,
 			TargetVMArch: targetArch,
 			Timeouts:     targets.Get(targets.NetBSD, targetArch).Timeouts(1),

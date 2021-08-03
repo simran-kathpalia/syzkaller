@@ -333,12 +333,12 @@ func createConfig(target *prog.Target, features *host.Features, featuresFlags cs
 	if featuresFlags["net_reset"].Enabled {
 		config.Flags |= ipc.FlagEnableNetReset
 	}
-	if featuresFlags["cgroups"].Enabled {
+	/*if featuresFlags["cgroups"].Enabled {
 		config.Flags |= ipc.FlagEnableCgroups
 	}
 	if featuresFlags["close_fds"].Enabled {
 		config.Flags |= ipc.FlagEnableCloseFds
-	}
+	}*/
 	if featuresFlags["devlink_pci"].Enabled && features[host.FeatureDevlinkPCI].Enabled {
 		config.Flags |= ipc.FlagEnableDevlinkPCI
 	}

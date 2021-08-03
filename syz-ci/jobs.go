@@ -174,8 +174,8 @@ func (jp *JobProcessor) pollManagerCommits(mgr *Manager) error {
 }
 
 func (jp *JobProcessor) pollRepo(mgr *Manager, URL, branch, reportEmail string) ([]*vcs.Commit, error) {
-	dir := osutil.Abs(filepath.Join("jobs", mgr.managercfg.TargetOS, "kernel"))
-	repo, err := vcs.NewRepo(mgr.managercfg.TargetOS, mgr.managercfg.Type, dir)
+	dir := osutil.Abs(filepath.Join("jobs", mgr.managercfg.TargetVMOS, "kernel"))
+	repo, err := vcs.NewRepo(mgr.managercfg.TargetVMOS, mgr.managercfg.Type, dir)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create kernel repo: %v", err)
 	}
@@ -186,8 +186,8 @@ func (jp *JobProcessor) pollRepo(mgr *Manager, URL, branch, reportEmail string) 
 }
 
 func (jp *JobProcessor) getCommitInfo(mgr *Manager, URL, branch string, commits []string) ([]*vcs.Commit, error) {
-	dir := osutil.Abs(filepath.Join("jobs", mgr.managercfg.TargetOS, "kernel"))
-	repo, err := vcs.NewRepo(mgr.managercfg.TargetOS, mgr.managercfg.Type, dir)
+	dir := osutil.Abs(filepath.Join("jobs", mgr.managercfg.TargetVMOS, "kernel"))
+	repo, err := vcs.NewRepo(mgr.managercfg.TargetVMOS, mgr.managercfg.Type, dir)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create kernel repo: %v", err)
 	}
@@ -287,7 +287,7 @@ type Job struct {
 func (jp *JobProcessor) process(job *Job) *dashapi.JobDoneReq {
 	req, mgr := job.req, job.mgr
 
-	dir := osutil.Abs(filepath.Join("jobs", mgr.managercfg.TargetOS))
+	dir := osutil.Abs(filepath.Join("jobs", mgr.managercfg.TargetVMOS))
 	mgrcfg := new(mgrconfig.Config)
 	*mgrcfg = *mgr.managercfg
 	mgrcfg.Workdir = filepath.Join(dir, "workdir")
@@ -302,6 +302,7 @@ func (jp *JobProcessor) process(job *Job) *dashapi.JobDoneReq {
 			Manager:         mgr.name,
 			ID:              req.ID,
 			OS:              mgr.managercfg.TargetOS,
+			VMOS:            mgr.managercfg.TargetVMOS,
 			Arch:            mgr.managercfg.TargetArch,
 			VMArch:          mgr.managercfg.TargetVMArch,
 			SyzkallerCommit: req.SyzkallerCommit,
@@ -503,7 +504,7 @@ func (jp *JobProcessor) testPatch(job *Job, mgrcfg *mgrconfig.Config) error {
 	}
 
 	log.Logf(0, "job: fetching kernel...")
-	repo, err := vcs.NewRepo(mgrcfg.TargetOS, mgrcfg.Type, mgrcfg.KernelSrc)
+	repo, err := vcs.NewRepo(mgrcfg.TargetVMOS, mgrcfg.Type, mgrcfg.KernelSrc)
 	if err != nil {
 		return fmt.Errorf("failed to create kernel repo: %v", err)
 	}
@@ -526,7 +527,7 @@ func (jp *JobProcessor) testPatch(job *Job, mgrcfg *mgrconfig.Config) error {
 	resp.Build.KernelCommitTitle = kernelCommit.Title
 	resp.Build.KernelCommitDate = kernelCommit.CommitDate
 
-	if err := build.Clean(mgrcfg.TargetOS, mgrcfg.TargetVMArch, mgrcfg.Type, mgrcfg.KernelSrc); err != nil {
+	if err := build.Clean(mgrcfg.TargetVMOS, mgrcfg.TargetVMArch, mgrcfg.Type, mgrcfg.KernelSrc); err != nil {
 		return fmt.Errorf("kernel clean failed: %v", err)
 	}
 	if len(req.Patch) != 0 {

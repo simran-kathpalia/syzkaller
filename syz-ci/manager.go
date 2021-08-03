@@ -107,7 +107,7 @@ func createManager(cfg *Config, mgrcfg *ManagerConfig, stop chan struct{}, debug
 		}
 	}
 	kernelDir := filepath.Join(dir, "kernel")
-	repo, err := vcs.NewRepo(mgrcfg.managercfg.TargetOS, mgrcfg.managercfg.Type, kernelDir)
+	repo, err := vcs.NewRepo(mgrcfg.managercfg.TargetVMOS, mgrcfg.managercfg.Type, kernelDir)
 	if err != nil {
 		log.Fatalf("failed to create repo for %v: %v", mgrcfg.Name, err)
 	}
@@ -296,7 +296,7 @@ func (mgr *Manager) build(kernelCommit *vcs.Commit) error {
 		return fmt.Errorf("failed to create tmp dir: %v", err)
 	}
 	params := build.Params{
-		TargetOS:     mgr.managercfg.TargetOS,
+		TargetOS:     mgr.managercfg.TargetVMOS,
 		TargetArch:   mgr.managercfg.TargetVMArch,
 		VMType:       mgr.managercfg.Type,
 		KernelDir:    mgr.kernelDir,
@@ -562,6 +562,7 @@ func (mgr *Manager) createDashboardBuild(info *BuildInfo, imageDir, typ string) 
 		Manager:             mgr.name,
 		ID:                  hash.String(tagData),
 		OS:                  mgr.managercfg.TargetOS,
+		VMOS:                mgr.managercfg.TargetVMOS,
 		Arch:                mgr.managercfg.TargetArch,
 		VMArch:              mgr.managercfg.TargetVMArch,
 		SyzkallerCommit:     prog.GitRevisionBase,

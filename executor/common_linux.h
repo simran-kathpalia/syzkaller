@@ -324,6 +324,13 @@ static void netlink_add_veth(struct nlmsg* nlmsg, int sock, const char* name,
 	}
 }
 
+#ifndef IFLA_HSR_SLAVE1
+#define IFLA_HSR_SLAVE1 1
+#endif
+#ifndef IFLA_HSR_SLAVE2
+#define IFLA_HSR_SLAVE2 2
+#endif
+
 static void netlink_add_hsr(struct nlmsg* nlmsg, int sock, const char* name,
 			    const char* slave1, const char* slave2)
 {
@@ -406,6 +413,14 @@ static void netlink_add_geneve(struct nlmsg* nlmsg, int sock, const char* name, 
 #define IPVLAN_MODE_L3S 2
 #undef IPVLAN_F_VEPA
 #define IPVLAN_F_VEPA 2
+
+// XXX FreeBSD only
+#ifndef IFLA_IPVLAN_MODE
+#define IFLA_IPVLAN_MODE 1
+#endif
+#ifndef IPVLAN_MODE_L2
+#define IPVLAN_MODE_L2 0
+#endif
 
 static void netlink_add_ipvlan(struct nlmsg* nlmsg, int sock, const char* name, const char* link, uint16 mode, uint16 flags)
 {
@@ -3624,6 +3639,7 @@ static void sandbox_common()
 	prctl(PR_SET_PDEATHSIG, SIGKILL, 0, 0, 0);
 	setsid();
 
+#if 0 
 #if SYZ_EXECUTOR || __NR_syz_init_net_socket || SYZ_DEVLINK_PCI
 	int netns = open("/proc/self/ns/net", O_RDONLY);
 	if (netns == -1)
@@ -3631,6 +3647,7 @@ static void sandbox_common()
 	if (dup2(netns, kInitNetNsFd) < 0)
 		fail("dup2(netns, kInitNetNsFd) failed");
 	close(netns);
+#endif
 #endif
 
 	struct rlimit rlim;

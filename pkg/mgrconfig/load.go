@@ -26,6 +26,7 @@ type Derived struct {
 
 	// Parsed Target:
 	TargetOS     string
+	TargetVMOS   string
 	TargetArch   string
 	TargetVMArch string
 
@@ -90,7 +91,7 @@ func defaultValues() *Config {
 
 func loadPartial(cfg *Config) (*Config, error) {
 	var err error
-	cfg.TargetOS, cfg.TargetVMArch, cfg.TargetArch, err = splitTarget(cfg.RawTarget)
+	cfg.TargetOS, cfg.TargetVMOS, cfg.TargetVMArch, cfg.TargetArch, err = splitTarget(cfg.RawTarget)
 	if err != nil {
 		return nil, err
 	}
@@ -98,9 +99,9 @@ func loadPartial(cfg *Config) (*Config, error) {
 	if err != nil {
 		return nil, err
 	}
-	cfg.SysTarget = targets.Get(cfg.TargetOS, cfg.TargetVMArch)
+	cfg.SysTarget = targets.Get(cfg.TargetVMOS, cfg.TargetVMArch)
 	if cfg.SysTarget == nil {
-		return nil, fmt.Errorf("unsupported OS/arch: %v/%v", cfg.TargetOS, cfg.TargetVMArch)
+		return nil, fmt.Errorf("unsupported OS/arch: %v/%v", cfg.TargetVMOS, cfg.TargetVMArch)
 	}
 	return cfg, nil
 }
@@ -108,6 +109,7 @@ func loadPartial(cfg *Config) (*Config, error) {
 func Complete(cfg *Config) error {
 	if err := checkNonEmpty(
 		cfg.TargetOS, "target",
+		cfg.TargetVMOS, "target",
 		cfg.TargetVMArch, "target",
 		cfg.TargetArch, "target",
 		cfg.Workdir, "workdir",
@@ -233,12 +235,12 @@ func (cfg *Config) checkSSHParams() error {
 func (cfg *Config) completeBinaries() error {
 	cfg.Syzkaller = osutil.Abs(cfg.Syzkaller)
 	exe := cfg.SysTarget.ExeExtension
-	targetBin := func(name, arch string) string {
-		return filepath.Join(cfg.Syzkaller, "bin", cfg.TargetOS+"_"+arch, name+exe)
+	targetBin := func(name, os, arch string) string {
+		return filepath.Join(cfg.Syzkaller, "bin", os+"_"+arch, name+exe)
 	}
-	cfg.FuzzerBin = targetBin("syz-fuzzer", cfg.TargetVMArch)
-	cfg.ExecprogBin = targetBin("syz-execprog", cfg.TargetVMArch)
-	cfg.ExecutorBin = targetBin("syz-executor", cfg.TargetArch)
+	cfg.FuzzerBin = targetBin("syz-fuzzer", cfg.TargetVMOS, cfg.TargetVMArch)
+	cfg.ExecprogBin = targetBin("syz-execprog", cfg.TargetVMOS, cfg.TargetVMArch)
+	cfg.ExecutorBin = targetBin("syz-executor", cfg.TargetVMOS, cfg.TargetArch)
 	// If the target already provides an executor binary, we don't need to copy it.
 	if cfg.SysTarget.ExecutorBin != "" {
 		cfg.ExecutorBin = ""
@@ -255,21 +257,32 @@ func (cfg *Config) completeBinaries() error {
 	return nil
 }
 
-func splitTarget(target string) (string, string, string, error) {
+func splitTarget(target string) (string, string, string, string, error) {
 	if target == "" {
-		return "", "", "", fmt.Errorf("target is empty")
+		return "", "", "", "", fmt.Errorf("target is empty")
 	}
 	targetParts := strings.Split(target, "/")
-	if len(targetParts) != 2 && len(targetParts) != 3 {
-		return "", "", "", fmt.Errorf("bad config param target")
+	if len(targetParts) < 2 && len(targetParts) > 4 {
+		return "", "", "", "", fmt.Errorf("bad config param target")
 	}
-	os := targetParts[0]
+	os := ""
+	arch := ""
+	vmos := targetParts[0]
 	vmarch := targetParts[1]
-	arch := targetParts[1]
-	if len(targetParts) == 3 {
+	if len(targetParts) == 2 {
+		// linux/amd64
+		os = vmos
+		arch = vmarch
+	} else if len(targetParts) == 3 {
+		// netbsd/amd64/386
+		os = vmos
 		arch = targetParts[2]
+	} else {
+		// freebsd/amd64/linux/386
+		os = targetParts[2]
+		arch = targetParts[3]
 	}
-	return os, vmarch, arch, nil
+	return vmos, vmarch, os, arch, nil
 }
 
 func ParseEnabledSyscalls(target *prog.Target, enabled, disabled []string) ([]int, error) {

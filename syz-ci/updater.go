@@ -78,10 +78,10 @@ func NewSyzUpdater(cfg *Config) *SyzUpdater {
 	targets := make(map[string]bool)
 	for _, mgr := range cfg.Managers {
 		mgrcfg := mgr.managercfg
-		os, vmarch, arch := mgrcfg.TargetOS, mgrcfg.TargetVMArch, mgrcfg.TargetArch
-		targets[os+"/"+vmarch+"/"+arch] = true
-		files[fmt.Sprintf("bin/%v_%v/syz-fuzzer", os, vmarch)] = true
-		files[fmt.Sprintf("bin/%v_%v/syz-execprog", os, vmarch)] = true
+		vmos, os, vmarch, arch := mgrcfg.TargetVMOS, mgrcfg.TargetOS, mgrcfg.TargetVMArch, mgrcfg.TargetArch
+		targets[os+"/"+vmarch+"/"+arch+"/"+vmos] = true
+		files[fmt.Sprintf("bin/%v_%v/syz-fuzzer", vmos, vmarch)] = true
+		files[fmt.Sprintf("bin/%v_%v/syz-execprog", vmos, vmarch)] = true
 		if mgrcfg.SysTarget.ExecutorBin == "" {
 			files[fmt.Sprintf("bin/%v_%v/syz-executor", os, arch)] = true
 		}
@@ -264,6 +264,7 @@ func (upd *SyzUpdater) build(commit *vcs.Commit) error {
 			"TARGETOS="+parts[0],
 			"TARGETVMARCH="+parts[1],
 			"TARGETARCH="+parts[2],
+			"TARGETVMOS="+parts[3],
 		)
 		if _, err := osutil.Run(time.Hour, cmd); err != nil {
 			return osutil.PrependContext("make target failed", err)
@@ -314,6 +315,7 @@ func (upd *SyzUpdater) uploadBuildError(commit *vcs.Commit, buildErr error) {
 				Manager:             managercfg.Name,
 				ID:                  commit.Hash,
 				OS:                  managercfg.TargetOS,
+				VMOS:                managercfg.TargetVMOS,
 				Arch:                managercfg.TargetArch,
 				VMArch:              managercfg.TargetVMArch,
 				SyzkallerCommit:     commit.Hash,
