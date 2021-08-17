@@ -115,12 +115,6 @@ executor: descriptions
 ifeq ($(TARGETOS),fuchsia)
 	# Dont build syz-executor for fuchsia.
 else
-ifneq ("$(BUILDOS)", "$(NATIVEBUILDOS)")
-	$(info ************************************************************************************)
-	$(info Executor will not be built)
-	$(info Building executor for ${TARGETOS} is not supported on ${BUILDOS})
-	$(info ************************************************************************************)
-else
 ifneq ("$(NO_CROSS_COMPILER)", "")
 	$(info ************************************************************************************)
 	$(info Executor will not be built)
@@ -130,9 +124,8 @@ ifneq ("$(NO_CROSS_COMPILER)", "")
 else
 	mkdir -p ./bin/$(TARGETOS)_$(TARGETARCH)
 	$(CC) -o ./bin/$(TARGETOS)_$(TARGETARCH)/syz-executor$(EXE) executor/executor.cc \
-		$(ADDCFLAGS) $(CFLAGS) -DGOOS_$(TARGETOS)=1 -DGOARCH_$(TARGETARCH)=1 \
+		-m64 -O2 -pthread -Wall -Werror -Wparentheses -Wframe-larger-than=16384 -static -std=c++03 -DGOOS_$(TARGETOS)=1 -DGOARCH_$(TARGETARCH)=1 \
 		-DHOSTGOOS_$(HOSTOS)=1 -DGIT_REVISION=\"$(REV)\"
-endif
 endif
 endif
 
